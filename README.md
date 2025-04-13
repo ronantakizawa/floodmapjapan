@@ -1,5 +1,5 @@
 # floodmapjapan
-A Smart Flood Hazard Map of Japan built with ML. 
+A Smart Flood Hazard Map of Japan built with Machine Learning.
 ![flood_risk_visualization_final](https://github.com/user-attachments/assets/d7a62ca8-b1ad-4070-aab8-eb109108786b)
 
 ## Features
