@@ -13,8 +13,7 @@ Comparison with official flood hazard maps from Japanese government sources
 ## Data Sources
 The project uses two primary datasets:
 
-Hydromap of Japan (GeoTIFF files):
-
+Hydromap of Japan (GeoTIFF files from the University of Tokyo):
 Water directional flow
 Elevation data
 Upstream drainage area (flow accumulation)
@@ -22,7 +21,7 @@ River channel width
 HAND (Height Above Nearest Drainage)
 
 
-Historical flood records (CSV):
+Historical flood records (CSV from National Research Institute for Earth Science and Disaster Prevention):
 
 Infrastructure damage
 Transportation impacts
