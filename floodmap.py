@@ -46,62 +46,53 @@ def calculate_flood_risk(elevation, flow_direction, hand, upstream_area, river_w
         1 - ((elevation - elevation_high_risk) / (elevation_safe - elevation_high_risk)),
         elevation_norm
     )
-    
-    # Apply square root transformation to reduce extremes (land areas only)
-    elevation_norm = np.where(land_mask, elevation_norm ** 0.5, elevation_norm)
-    
     # Replace negative HAND values with 0 (HAND should be non-negative) and apply land mask
     hand_norm = np.where((hand > 0) & land_mask, hand, 0)
-    # Apply exponential decay transformation based on ML analysis
-    hand_norm = np.where(land_mask, np.exp(-0.15 * hand_norm), 0)
     # Normalize the transformed HAND values (land areas only)
     hand_norm_reshaped = hand_norm.reshape(-1, 1)
     land_indices = np.where(land_mask.reshape(-1))[0]
+    # Only proceed with normalization if land pixels exist in the dataset
     if len(land_indices) > 0:  # Only normalize if there are land pixels
         hand_norm_reshaped[land_indices] = scaler.fit_transform(hand_norm_reshaped[land_indices])
     hand_norm = hand_norm_reshaped.reshape(hand.shape)
-    # Apply square root transformation
-    hand_norm = np.where(land_mask, hand_norm ** 0.5, hand_norm)
     
-    # Apply log transformation to upstream area (addresses skewed distribution)
-    upstream_norm = np.where((upstream_area > 0) & land_mask, np.log1p(upstream_area), 0)
+    # Apply land mask and ensure only positive upstream area values are considered
+    upstream_norm = np.where((upstream_area > 0) & land_mask, upstream_area, 0)  # Keep only positive upstream area values on land, set everything else to 0
     # Normalize the transformed upstream area values (land areas only)
-    upstream_norm_reshaped = upstream_norm.reshape(-1, 1)
-    if len(land_indices) > 0:  # Only normalize if there are land pixels
-        upstream_norm_reshaped[land_indices] = scaler.fit_transform(upstream_norm_reshaped[land_indices])
-    upstream_norm = upstream_norm_reshaped.reshape(upstream_area.shape)
-    # Apply square root transformation
-    upstream_norm = np.where(land_mask, upstream_norm ** 0.5, upstream_norm)
+    upstream_norm_reshaped = upstream_norm.reshape(-1, 1)  # Reshape the 2D array to a column vector for the scaler function
+    # Only proceed with normalization if land pixels exist in the dataset
+    if len(land_indices) > 0:  # Check if there are any land pixels to normalize
+        upstream_norm_reshaped[land_indices] = scaler.fit_transform(upstream_norm_reshaped[land_indices])  # Scale land values to 0-1 range
+    # Reshape back to original dimensions
+    upstream_norm = upstream_norm_reshaped.reshape(upstream_area.shape)  # Convert column vector back to original 2D array shape
     
     # Calculate flow convergence by counting unique flow directions in 3x3 neighborhood
     flow_convergence = ndimage.generic_filter(flow_direction, lambda x: len(np.unique(x)), size=3)
     # Normalize the flow convergence values (land areas only)
     flow_convergence_norm_reshaped = flow_convergence.reshape(-1, 1)
+    # Only proceed with normalization if land pixels exist in the dataset
     if len(land_indices) > 0:  # Only normalize if there are land pixels
         flow_convergence_norm_reshaped[land_indices] = scaler.fit_transform(flow_convergence_norm_reshaped[land_indices])
     flow_convergence_norm = flow_convergence_norm_reshaped.reshape(flow_direction.shape)
-    # Apply square root transformation
-    flow_convergence_norm = np.where(land_mask, flow_convergence_norm ** 0.5, flow_convergence_norm)
     
-    # Apply Gaussian filter to river width to model the influence on nearby areas
-    river_influence = ndimage.gaussian_filter(np.where(land_mask, river_width, 0), sigma=7)
+
+    river_influence = np.where(land_mask, river_width, 0)
     # Normalize the river influence values (land areas only)
     river_influence_norm_reshaped = river_influence.reshape(-1, 1)
+    # Only proceed with normalization if land pixels exist in the dataset
     if len(land_indices) > 0:  # Only normalize if there are land pixels
         river_influence_norm_reshaped[land_indices] = scaler.fit_transform(river_influence_norm_reshaped[land_indices])
     river_influence_norm = river_influence_norm_reshaped.reshape(river_width.shape)
-    # Apply square root transformation
-    river_influence_norm = np.where(land_mask, river_influence_norm ** 0.5, river_influence_norm)
     
     # Calculate final risk score using ML-derived weights for each factor
     flood_risk = np.zeros_like(elevation)
     # Only calculate risk for land areas
     flood_risk = np.where(land_mask, 
-        0.509 * elevation_norm +             
-        0 * hand_norm +                
-        0.491 * upstream_norm +             
-        0 * flow_convergence_norm +    
-        0 * river_influence_norm,      # River width has smaller impact
+        0.703 * elevation_norm +             
+        0.004 * hand_norm +                
+        0.289 * upstream_norm +             
+        0.00 * flow_convergence_norm +    
+        0.004 * river_influence_norm,      # River width has smaller impact
         np.nan)  # Use NaN for ocean areas
     
     # Apply logarithmic scaling to compress the range of values (land areas only)
@@ -123,7 +114,7 @@ def visualize_flood_risk(risk_array, output_path, transform, crs):
     fig, ax = plt.figure(figsize=(12, 10)), plt.gca()
     
     # Create a custom colormap that has white for NaN values
-    cmap = plt.cm.RdYlBu_r.copy()
+    cmap = plt.cm.plasma.copy()
     cmap.set_bad('black')  # Set NaN values to Black
     
     # Display the risk array as an image with specific color mapping
