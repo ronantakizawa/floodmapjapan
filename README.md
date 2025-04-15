@@ -14,15 +14,15 @@ Comparison with official flood hazard maps from Japanese government sources
 ## Data Sources
 The project uses two primary datasets:
 
-1. A hydromap of Japan (University of Tokyo) with features such as:
+#1 A hydromap of Japan (University of Tokyo) with features such as:
 
-* Water Directional Flow: The direction in which surface water is expected to move based on terrain and hydrological modeling (Measured in angular degrees from 0–360°).
-* Elevation: The height of the land surface above sea level (m).
-* Upstream Drainage Area (Flow Accumulation Area): The total land area that drains into a specific point on the landscape, indicating how much water can potentially flow through it (km²),
-* River Channel Width: The estimated horizontal width of a river at a given location, which affects its capacity to carry floodwaters (m).
-* HAND (Height Above Nearest Drainage): A terrain metric that represents how high a given point is above the nearest stream or drainage line, helping identify flood-prone lowlands (m).
+* **Water Directional Flow:** The direction in which surface water is expected to move based on terrain and hydrological modeling (Measured in angular degrees from 0–360°).
+* **Elevation:** The height of the land surface above sea level (m).
+* **Upstream Drainage Area (Flow Accumulation Area):** The total land area that drains into a specific point on the landscape, indicating how much water can potentially flow through it (km²),
+* **River Channel Width:** The estimated horizontal width of a river at a given location, which affects its capacity to carry floodwaters (m).
+* **HAND (Height Above Nearest Drainage):** A terrain metric that represents how high a given point is above the nearest stream or drainage line, helping identify flood-prone lowlands (m).
 
-2. GIS data from the Japanese National Research Institute for Earth Science and Disaster Prevention, covering floods in Japan from 1961 to 2008, with information such as:
+#2 GIS data from the Japanese National Research Institute for Earth Science and Disaster Prevention, covering floods in Japan from 1961 to 2008, with information such as:
 * Infrastructure damage
 * Transportation Damage
 * Water / Flood Impacts (Flood area, flood depth)
