@@ -30,11 +30,12 @@ The project uses two primary datasets:
 ## Machine Learning Approach
 The project employs a Random Forest Regressor model to derive optimal weights for various flood risk factors:
 Derived weights for flood risk factors:
-elevation: 0.189
-hand: 0.011
-upstream: 0.760
-flow_conv: 0.000
-river_width: 0.039
+
+* elevation: 0.189
+* hand: 0.011
+* upstream: 0.760
+* flow_conv: 0.000
+* river_width: 0.039
 
 These weights are used in the calculate_flood_risk function to create a normalized risk score (0-1) for each location in Japan. 
 
