@@ -6,6 +6,7 @@ import numpy as np
 import rasterio
 # Import matplotlib.pyplot for creating visualizations
 import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap, BoundaryNorm
 
 BASE_DIR = '.'
 OUTPUT_DIR = 'flood_risk_outputs'
@@ -32,20 +33,18 @@ def calculate_flood_risk(elevation, flow_direction, hand, upstream_area, river_w
     scaler = MinMaxScaler()
     
     # ELEVATION: Implement thresholds with ocean masking
-    elevation_safe = 100  # "Safe" elevation threshold in meters
-    elevation_high_risk = 10  # High risk threshold in meters
-    
-    # Create a more nuanced risk curve for elevation (only for land areas)
-    elevation_norm = np.zeros_like(elevation)
-    # High risk for very low elevations (below high_risk threshold)
-    elevation_norm = np.where((elevation <= elevation_high_risk) & land_mask, 1.0, elevation_norm)
-    # Graduated risk for middle elevations
-    middle_mask = (elevation > elevation_high_risk) & (elevation < elevation_safe) & land_mask
-    elevation_norm = np.where(
-        middle_mask,
-        1 - ((elevation - elevation_high_risk) / (elevation_safe - elevation_high_risk)),
-        elevation_norm
-    )
+    elevation_norm = np.where(land_mask, elevation, 0)  # Handle non-land areas
+    # Invert the values (lower elevation = higher risk value)
+    elevation_norm = np.where(land_mask, -elevation_norm, 0)
+
+    # Normalize elevation values to 0-1 range (land areas only)
+    elevation_norm_reshaped = elevation_norm.reshape(-1, 1)
+    land_indices = np.where(land_mask.reshape(-1))[0]
+    if len(land_indices) > 0:  # Only normalize if there are land pixels
+        scaler = MinMaxScaler()
+        elevation_norm_reshaped[land_indices] = scaler.fit_transform(elevation_norm_reshaped[land_indices])
+    elevation_norm = elevation_norm_reshaped.reshape(elevation.shape)
+
     # Replace negative HAND values with 0 (HAND should be non-negative) and apply land mask
     hand_norm = np.where((hand > 0) & land_mask, hand, 0)
     # Normalize the transformed HAND values (land areas only)
@@ -88,15 +87,14 @@ def calculate_flood_risk(elevation, flow_direction, hand, upstream_area, river_w
     flood_risk = np.zeros_like(elevation)
     # Only calculate risk for land areas
     flood_risk = np.where(land_mask, 
-        0.703 * elevation_norm +             
-        0.004 * hand_norm +                
-        0.289 * upstream_norm +             
-        0.00 * flow_convergence_norm +    
-        0.004 * river_influence_norm,      # River width has smaller impact
+        0.189 * elevation_norm +             
+        0.011 * hand_norm +                
+        0.760 * upstream_norm +             
+        0 * flow_convergence_norm +    
+        0.039 * river_influence_norm,      # River width has smaller impact
         np.nan)  # Use NaN for ocean areas
-    
-    # Apply logarithmic scaling to compress the range of values (land areas only)
-    flood_risk = np.where(~np.isnan(flood_risk), np.log1p(flood_risk) / np.log1p(1), np.nan)
+
+    flood_risk = np.where(~np.isnan(flood_risk), np.power(flood_risk, 0.1), np.nan)
     
     # Normalize the final risk scores to 0-1 range (land areas only)
     flood_risk_reshaped = flood_risk.reshape(-1, 1)
@@ -109,29 +107,51 @@ def calculate_flood_risk(elevation, flow_direction, hand, upstream_area, river_w
     return flood_risk
 
 def visualize_flood_risk(risk_array, output_path, transform, crs):
-    """Visualize the flood risk map and save to file with ocean areas colored white."""
+    """Visualize the flood risk map and save to file with ocean areas colored black."""
     # Create a figure and get the current axes
     fig, ax = plt.figure(figsize=(12, 10)), plt.gca()
     
-    # Create a custom colormap that has white for NaN values
-    cmap = plt.cm.plasma.copy()
-    cmap.set_bad('black')  # Set NaN values to Black
+    # Define a set of distinct colors for small ranges
+    colors = [
+        '#000080',  # Navy (0.0-0.1)
+        '#0000FF',  # Blue (0.1-0.2)
+        '#00FFFF',  # Cyan (0.2-0.3)
+        '#008000',  # Green (0.3-0.4)
+        '#ADFF2F',  # GreenYellow (0.4-0.5)
+        '#FFFF00',  # Yellow (0.5-0.6)
+        '#FFA500',  # Orange (0.6-0.7)
+        '#FF0000',  # Red (0.7-0.8)
+        '#800000',  # Maroon (0.8-0.9)
+        '#FF00FF',  # Magenta (0.9-1.0)
+    ]
     
-    # Display the risk array as an image with specific color mapping
-    img = ax.imshow(risk_array, cmap=cmap, vmin=0, vmax=1)
+    # Create custom colormap with 10 distinct bands
+    cmap = LinearSegmentedColormap.from_list('high_contrast', colors, N=10)
+    cmap.set_bad('black')  # Set NaN values to black
     
-    # Add a colorbar to the plot to show the risk scale
-    cbar = plt.colorbar(img, ax=ax)
-    # Add a label to the colorbar
-    cbar.set_label('Flood Risk Index (0-1)')
+    # Create boundaries for distinct color bands
+    bounds = np.linspace(0, 1, 11)  # 11 boundaries for 10 distinct ranges
+    norm = BoundaryNorm(bounds, cmap.N)
+    
+    # Display the risk array with the custom colormap
+    img = ax.imshow(risk_array, cmap=cmap, norm=norm)
+    
+    # Add a colorbar with tick marks at the boundaries
+    cbar = plt.colorbar(img, ax=ax, ticks=bounds)
+    cbar.set_label('Flood Hazard Index (0-1)')
+    
+    # Format the tick labels to show ranges
+    tick_labels = [f"{bounds[i]:.1f}-{bounds[i+1]:.1f}" for i in range(len(bounds)-1)]
+    # Add an empty string at the beginning for proper alignment
+    cbar.set_ticklabels([''] + tick_labels)
     
     # Add a title to the plot
-    plt.title('Flood Risk Assessment for Japan', fontsize=16)
+    plt.title('Flood Hazard Map of Japan', fontsize=18, fontweight='bold')
     # Turn off the axis labels and ticks
     plt.axis('off')
     
     # Save the visualization as a PNG file
-    plt.savefig(os.path.join(OUTPUT_DIR, 'flood_risk_visualization.png'), dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join(os.path.dirname(output_path), 'flood_hazard_visualization.png'), dpi=300, bbox_inches='tight')
     
     # Save the risk data as a GeoTIFF file for GIS applications
     with rasterio.open(output_path, 'w',
