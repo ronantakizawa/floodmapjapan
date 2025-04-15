@@ -1,6 +1,8 @@
 # floodmapjapan
 **A Smart Flood Hazard Map of Japan built with GIS and Random Forest Regression** 
 
+Leave a star if you enjoyed it! ⭐️
+
 Full Detailed Analysis: https://medium.com/@ronantech/building-a-smart-flood-map-of-japan-using-gis-and-machine-learning-3303efff9957
 
 ![floodhazardmapjapan](https://github.com/user-attachments/assets/cdcc3ec3-9d6e-489b-a61a-0314a4acaf42)
