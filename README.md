@@ -17,7 +17,7 @@ Proper handling of ocean masking for focused land-based analysis
 Interactive and static map visualizations
 Comparison with official flood hazard maps from Japanese government sources
 
-## Data Sources
+## Datasets
 The project uses two primary datasets:
 
 #1 A hydromap of Japan (University of Tokyo) with features such as:
@@ -29,13 +29,16 @@ The project uses two primary datasets:
 * **HAND (Height Above Nearest Drainage):** A terrain metric that represents how high a given point is above the nearest stream or drainage line, helping identify flood-prone lowlands (m).
 
 #2 GIS data from the Japanese National Research Institute for Earth Science and Disaster Prevention, covering floods in Japan from 1961 to 2008, with information such as:
-* Infrastructure damage
-* Transportation Damage
-* Water / Flood Impacts (Flood area, flood depth)
+* Flood date, time, location, area
+
+
+## Technical Implementation
+The main algorithm processes GeoTIFF files containing geographical data and applies the ML-derived weights to calculate flood risk scores. Ocean areas are properly masked to focus the analysis on land areas.
 
 ## Machine Learning Approach
-The project employs a Random Forest Regressor model to derive optimal weights for various flood risk factors:
-Derived weights for flood risk factors:
+The project employs a Random Forest Regressor model to derive optimal weights for various flood risk factors. Weights are derived by getting the elevation, HAND, upstream drainage area, river direction, and river width values from flood locations in Japan from 1961-2008, and running a Random Forest Regressor model with flood area as the target variable to see which variables contribute to large flood areas the most. 
+
+Here are the weights after running the model:
 
 * elevation: 0.364475
 * hand: 0.302217
@@ -46,16 +49,6 @@ Derived weights for flood risk factors:
 These weights are used in the calculate_flood_risk function to create a normalized risk score (0-1) for each location in Japan. 
 
 ![feature_importance](https://github.com/user-attachments/assets/c3125fd6-7019-4bd8-ab10-daf947bc9e14)
-
-
-## Technical Implementation
-The main algorithm processes GeoTIFF files containing geographical data and applies the ML-derived weights to calculate flood risk scores. Ocean areas are properly masked to focus the analysis on land areas.
-Key components:
-
-Raster data processing with rasterio and rioxarray
-Normalization and spatial transformations
-Interactive map creation with folium
-Advanced visualization techniques
 
 ## Results
 The final flood risk map identifies several high-risk zones in Japan:
