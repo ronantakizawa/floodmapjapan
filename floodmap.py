@@ -109,39 +109,53 @@ def calculate_flood_risk(elevation, flow_direction, hand, upstream_area, river_w
 def visualize_flood_risk(risk_array, output_path, transform, crs):
     """Visualize the flood risk map and save to file with ocean areas colored black."""
     # Create a figure and get the current axes
-    fig, ax = plt.figure(figsize=(12, 10)), plt.gca()
+    fig = plt.figure(figsize=(12, 10))
+    ax = plt.gca()
     
-    # Define a set of distinct colors for small ranges
+    # Create masked array for visualization
+    masked_data = np.ma.masked_invalid(risk_array)
+    
+    # Define distinct colors with dark purple at the highest values
     colors = [
-        '#000080',  # Navy (0.0-0.1)
-        '#0000FF',  # Blue (0.1-0.2)
-        '#00FFFF',  # Cyan (0.2-0.3)
-        '#008000',  # Green (0.3-0.4)
-        '#ADFF2F',  # GreenYellow (0.4-0.5)
-        '#FFFF00',  # Yellow (0.5-0.6)
-        '#FFA500',  # Orange (0.6-0.7)
-        '#FF0000',  # Red (0.7-0.8)
-        '#800000',  # Maroon (0.8-0.9)
-        '#FF00FF',  # Magenta (0.9-1.0)
+        '#000033',  # Very Dark Navy (0.00-0.05)
+        '#000099',  # Dark Navy (0.05-0.10)
+        '#0000FF',  # Blue (0.10-0.15)
+        '#0099FF',  # Sky Blue (0.15-0.20)
+        '#00FFFF',  # Cyan (0.20-0.25)
+        '#00FF99',  # Spring Green (0.25-0.30)
+        '#00CC00',  # Green (0.30-0.35)
+        '#33FF33',  # Bright Green (0.35-0.40)
+        '#99FF33',  # Yellow-Green (0.40-0.45)
+        '#CCFF00',  # Lime (0.45-0.50)
+        '#FFFF00',  # Yellow (0.50-0.55)
+        '#FFCC00',  # Gold (0.55-0.60)
+        '#FF9900',  # Orange (0.60-0.65)
+        '#FF6600',  # Dark Orange (0.65-0.70)
+        '#FF0000',  # Red (0.70-0.75)
+        '#CC0000',  # Dark Red (0.75-0.80)
+        '#990000',  # Very Dark Red (0.80-0.85)
+        '#660066',  # Dark Purple (0.85-0.90)
+        '#9900CC',  # Purple (0.90-0.95)
+        '#FF00FF',  # Magenta (0.95-1.00)
     ]
     
-    # Create custom colormap with 10 distinct bands
-    cmap = LinearSegmentedColormap.from_list('high_contrast', colors, N=10)
-    cmap.set_bad('black')  # Set NaN values to black
+    # Create custom colormap with 20 distinct bands (for 0.05 increments)
+    cmap = LinearSegmentedColormap.from_list('high_contrast', colors, N=20)
+    cmap.set_bad('black')  # Set NaN values to black (ocean)
     
-    # Create boundaries for distinct color bands
-    bounds = np.linspace(0, 1, 11)  # 11 boundaries for 10 distinct ranges
+    # Create boundaries for distinct color bands with 0.05 increments
+    bounds = np.linspace(0, 1, 21)  # 21 boundaries for 20 distinct ranges
     norm = BoundaryNorm(bounds, cmap.N)
     
     # Display the risk array with the custom colormap
-    img = ax.imshow(risk_array, cmap=cmap, norm=norm)
+    img = ax.imshow(masked_data, cmap=cmap, norm=norm)
     
     # Add a colorbar with tick marks at the boundaries
     cbar = plt.colorbar(img, ax=ax, ticks=bounds)
-    cbar.set_label('Flood Hazard Index (0-1)')
+    cbar.set_label('Flood Hazard Index (0-1)', fontsize=12)
     
-    # Format the tick labels to show ranges
-    tick_labels = [f"{bounds[i]:.1f}-{bounds[i+1]:.1f}" for i in range(len(bounds)-1)]
+    # Format the tick labels to show ranges with 0.05 increments
+    tick_labels = [f"{bounds[i]:.2f}-{bounds[i+1]:.2f}" for i in range(len(bounds)-1)]
     # Add an empty string at the beginning for proper alignment
     cbar.set_ticklabels([''] + tick_labels)
     
