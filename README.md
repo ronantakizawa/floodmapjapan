@@ -58,6 +58,12 @@ Tokyo and Kanto Plain: Densely populated, highly urbanized areas with extensive 
 Osaka/Kyoto/Kobe region: Coastal lowlands and historical flood plains
 Hokkaido: Large river basins with flat terrain and cold-climate runoff characteristics
 
+## Flood Map Validation
+
+Here is the flood hazard map with real past flood locations mapped. As the map shows, post past flood events happened in purple regions, indicating that the model accurately predicts high-risk regions.
+![validationfloodhazardmap](https://github.com/user-attachments/assets/92260e4c-e1c3-4b0e-95e8-49f44f41577a)
+
+
 ## Future Work
 Find larger and more detailed datasets to further refine flood risk heuristics
 Implement additional variables such as soil permeability, urbanization levels, and climate change projections
