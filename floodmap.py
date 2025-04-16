@@ -66,32 +66,32 @@ def calculate_flood_risk(elevation, flow_direction, hand, upstream_area, river_w
     upstream_norm = upstream_norm_reshaped.reshape(upstream_area.shape)  # Convert column vector back to original 2D array shape
     
     # Calculate flow convergence by counting unique flow directions in 3x3 neighborhood
-    flow_convergence = ndimage.generic_filter(flow_direction, lambda x: len(np.unique(x)), size=3)
+    flow_direction = ndimage.generic_filter(flow_direction, lambda x: len(np.unique(x)), size=3)
     # Normalize the flow convergence values (land areas only)
-    flow_convergence_norm_reshaped = flow_convergence.reshape(-1, 1)
+    flow_direction_norm_reshaped = flow_direction.reshape(-1, 1)
     # Only proceed with normalization if land pixels exist in the dataset
     if len(land_indices) > 0:  # Only normalize if there are land pixels
-        flow_convergence_norm_reshaped[land_indices] = scaler.fit_transform(flow_convergence_norm_reshaped[land_indices])
-    flow_convergence_norm = flow_convergence_norm_reshaped.reshape(flow_direction.shape)
+        flow_direction_norm_reshaped[land_indices] = scaler.fit_transform(flow_direction_norm_reshaped[land_indices])
+    flow_direction_norm = flow_direction_norm_reshaped.reshape(flow_direction.shape)
     
 
-    river_influence = np.where(land_mask, river_width, 0)
+    river_width = np.where(land_mask, river_width, 0)
     # Normalize the river influence values (land areas only)
-    river_influence_norm_reshaped = river_influence.reshape(-1, 1)
+    river_width_norm_reshaped = river_width.reshape(-1, 1)
     # Only proceed with normalization if land pixels exist in the dataset
     if len(land_indices) > 0:  # Only normalize if there are land pixels
-        river_influence_norm_reshaped[land_indices] = scaler.fit_transform(river_influence_norm_reshaped[land_indices])
-    river_influence_norm = river_influence_norm_reshaped.reshape(river_width.shape)
+        river_width_norm_reshaped[land_indices] = scaler.fit_transform(river_width_norm_reshaped[land_indices])
+    river_width_norm = river_width_norm_reshaped.reshape(river_width.shape)
     
     # Calculate final risk score using ML-derived weights for each factor
     flood_risk = np.zeros_like(elevation)
     # Only calculate risk for land areas
     flood_risk = np.where(land_mask, 
-        0.189 * elevation_norm +             
-        0.011 * hand_norm +                
-        0.760 * upstream_norm +             
-        0 * flow_convergence_norm +    
-        0.039 * river_influence_norm,      # River width has smaller impact
+        0.364475 * elevation_norm +             
+        0.302217 * hand_norm +                
+        0.161996 * upstream_norm +             
+        0.165351 * flow_direction_norm +    
+        0.005961 * river_width_norm,      # River width has smaller impact
         np.nan)  # Use NaN for ocean areas
 
     flood_risk = np.where(~np.isnan(flood_risk), np.power(flood_risk, 0.1), np.nan)
