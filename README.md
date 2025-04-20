@@ -54,9 +54,9 @@ These weights are used in the calculate_flood_risk function to create a normaliz
 ## Results
 The final flood risk map identifies several high-risk zones in Japan:
 
-Tokyo and Kanto Plain: Densely populated, highly urbanized areas with extensive low-lying floodplains
-Osaka/Kyoto/Kobe region: Coastal lowlands and historical flood plains
-Hokkaido: Large river basins with flat terrain and cold-climate runoff characteristics
+* Tokyo and Kanto Plain: Densely populated, highly urbanized areas with extensive low-lying floodplains
+* Osaka/Kyoto/Kobe region: Coastal lowlands and historical flood plains
+* Hokkaido: Large river basins with flat terrain and cold-climate runoff characteristics
 
 ## Flood Map Validation
 
