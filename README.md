@@ -53,7 +53,7 @@ This makes sense because lower-lying areas are naturally more prone to inundatio
 
 These weights are used in the calculate_flood_risk function to create a normalized risk score (0-1) for each location in Japan. 
 
-![feature_importance](https://github.com/user-attachments/assets/c3125fd6-7019-4bd8-ab10-daf947bc9e14)
+<img width="988" alt="featureimportance" src="https://github.com/user-attachments/assets/eb2f47f3-243a-47a2-a501-6e5cd74259bd" />
 
 ## Results
 The final flood risk map identifies several high-risk zones in Japan:
